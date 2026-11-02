@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+      discovery:
+        enabled: true
+        prefer-ip-address: true
+        ip-address: 127.0.0.1
+        health-check-url: http://host.docker.internal:${server.port}/actuator/health
+        instance-id: ${spring.application.name}:${server.port}
+        health-check-interval: 10s
+        health-check-critical-timeout: 30s
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: productModule
+              uri: lb://ProductService
+              predicates:
+                - Path=/product/**
+            - id: stockModule
+              uri: lb://StockService
+              predicates:
+                - Path=/stock/**
+    loadbalancer:
+      cache:
+        ttl: 2s
+
+server:
+  port: 8080
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
